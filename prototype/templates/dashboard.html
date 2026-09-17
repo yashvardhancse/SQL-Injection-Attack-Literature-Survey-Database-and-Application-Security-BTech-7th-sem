@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — SQLi Defence Lab{% endblock %}
+{% block content %}
+<section class="card">
+  <div class="banner ok">✅ Authentication succeeded — session established.</div>
+  <h2>Welcome, {{ user.username }}</h2>
+  <table class="kv">
+    <tr><th>User ID</th><td>{{ user.id }}</td></tr>
+    <tr><th>Username</th><td>{{ user.username }}</td></tr>
+    <tr><th>Role</th><td><span class="pill {{ 'danger' if user.role == 'admin' else 'safe' }}">{{ user.role }}</span></td></tr>
+    <tr><th>Email</th><td>{{ user.email }}</td></tr>
+    <tr><th>Logged in via</th><td>{{ via_mode }}</td></tr>
+  </table>
+  {% if user.role == 'admin' %}
+    <div class="banner warn">⚠️ You are inside the <b>admin</b> account. If you reached
+    here without the real password, that is a successful SQL-injection
+    authentication bypass.</div>
+  {% endif %}
+  <a class="btn" href="{{ url_for('logout') }}">Log out</a>
+  <a class="btn ghost" href="{{ url_for('reset') }}">Reset demo DB</a>
+</section>
+{% endblock %}

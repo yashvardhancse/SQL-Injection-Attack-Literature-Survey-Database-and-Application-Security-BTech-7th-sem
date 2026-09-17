@@ -1,0 +1,76 @@
+:root {
+  --bg: #0f1216;
+  --panel: #171b22;
+  --panel2: #1e232c;
+  --ink: #e7ebf0;
+  --muted: #9aa4b2;
+  --line: #2a303a;
+  --accent: #4f8cff;
+  --danger: #ff5c72;
+  --safe: #34d399;
+  --warn: #fbbf24;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 15px/1.55 -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+}
+.topbar {
+  display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap;
+  padding: 16px 28px; background: linear-gradient(90deg,#12305f,#0f1216);
+  border-bottom: 1px solid var(--line);
+}
+.brand { font-size: 20px; font-weight: 700; }
+.subtitle { color: var(--muted); font-size: 13px; }
+.wrap { max-width: 1040px; margin: 26px auto; padding: 0 20px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.card {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  padding: 20px 22px; margin-bottom: 20px;
+}
+.card.wide, .grid + .card { grid-column: 1 / -1; }
+h2 { margin: 4px 0 8px; }
+h3 { margin: 2px 0 10px; }
+.muted { color: var(--muted); }
+.small { font-size: 12.5px; }
+.mono { font-family: "SF Mono", Consolas, Menlo, monospace; }
+label { display: block; margin: 12px 0 4px; font-size: 13px; color: var(--muted); }
+input[type=text], select {
+  width: 100%; padding: 11px 12px; border-radius: 9px;
+  border: 1px solid var(--line); background: var(--panel2); color: var(--ink);
+  font-size: 15px;
+}
+.check { display: flex; align-items: center; gap: 8px; color: var(--ink); }
+.check input { width: auto; }
+.controls { margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--line); }
+.btn {
+  display: inline-block; margin-top: 14px; padding: 11px 18px; border: 0;
+  border-radius: 9px; background: var(--accent); color: white; font-weight: 600;
+  cursor: pointer; text-decoration: none; font-size: 15px;
+}
+.btn.ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+.pill {
+  display: inline-block; padding: 4px 12px; border-radius: 999px;
+  font-size: 12.5px; font-weight: 600;
+}
+.pill.danger { background: rgba(255,92,114,.15); color: var(--danger); border: 1px solid var(--danger); }
+.pill.safe   { background: rgba(52,211,153,.13); color: var(--safe);   border: 1px solid var(--safe); }
+.banner { padding: 11px 14px; border-radius: 10px; margin: 10px 0; font-size: 14px; }
+.banner.ok    { background: rgba(52,211,153,.14); border: 1px solid var(--safe); }
+.banner.fail  { background: rgba(255,92,114,.12); border: 1px solid var(--danger); }
+.banner.block { background: rgba(79,140,255,.14); border: 1px solid var(--accent); }
+.banner.warn  { background: rgba(251,191,36,.13); border: 1px solid var(--warn); }
+pre.sql {
+  background: #0b0e12; border: 1px solid var(--line); border-radius: 9px;
+  padding: 12px; overflow-x: auto; color: #cfe1ff; font-size: 13px;
+  white-space: pre-wrap; word-break: break-word;
+}
+table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+table.kv th { text-align: left; color: var(--muted); width: 140px; font-weight: 500; padding: 6px 8px; }
+table.kv td { padding: 6px 8px; }
+table.payloads th, table.payloads td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+table.payloads code { color: #ffd18c; }
+code { background: #0b0e12; padding: 1px 6px; border-radius: 6px; }
+hr { border: 0; border-top: 1px solid var(--line); margin: 14px 0; }
+.foot { text-align: center; color: var(--muted); font-size: 12px; padding: 26px 20px 40px; }
+@media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }

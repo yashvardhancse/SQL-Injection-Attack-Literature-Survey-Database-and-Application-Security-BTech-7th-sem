@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Login — SQLi Defence Lab{% endblock %}
+{% block content %}
+<div class="grid">
+  <section class="card">
+    <h2>NovaBank — Account Login</h2>
+    <p class="muted">Demo bank portal. Try to log in as <code>admin</code> — with
+    or without the real password.</p>
+
+    <form method="post" action="{{ url_for('login') }}?mode={{ mode }}{% if waf_enabled %}&waf=on{% endif %}">
+      <label>Username
+        <input type="text" name="username" autocomplete="off" placeholder="username" autofocus>
+      </label>
+      <label>Password
+        <input type="text" name="password" autocomplete="off" placeholder="password">
+      </label>
+      <button type="submit" class="btn">Sign in</button>
+    </form>
+
+    <form method="get" action="{{ url_for('login') }}" class="controls">
+      <label>Protection mode
+        <select name="mode" onchange="this.form.submit()">
+          {% for key, label in modes.items() %}
+            <option value="{{ key }}" {% if key == mode %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="check">
+        <input type="checkbox" name="waf" value="on" onchange="this.form.submit()"
+               {% if waf_enabled %}checked{% endif %}>
+        Enable signature WAF (Variant 5)
+      </label>
+      <noscript><button class="btn ghost" type="submit">Apply</button></noscript>
+    </form>
+  </section>
+
+  <section class="card">
+    <h3>What is happening</h3>
+    <p class="muted">Current mode:</p>
+    <div class="pill {{ 'danger' if mode == 'vulnerable' else 'safe' }}">{{ modes[mode] }}</div>
+    <p class="muted small">WAF: {{ 'ON' if waf_enabled else 'OFF' }}</p>
+
+    {% if result %}
+      <hr>
+      <h4>Result</h4>
+      {% if result.outcome == 'denied' %}
+        <div class="banner block">⛔ {{ result.message }}</div>
+      {% elif result.outcome == 'error' %}
+        <div class="banner warn">⚠️ {{ result.message }}</div>
+      {% else %}
+        <div class="banner fail">🔒 {{ result.message }}</div>
+      {% endif %}
+
+      {% if result.waf %}<p class="mono small"><b>WAF:</b> {{ result.waf }}</p>{% endif %}
+      {% if result.validation %}<p class="mono small"><b>Validation:</b> {{ result.validation }}</p>{% endif %}
+
+      {% if result.query %}
+        <p class="muted small">SQL sent to the engine:</p>
+        <pre class="sql">{{ result.query }}</pre>
+        {% if result.params %}<p class="mono small"><b>Bound parameters:</b> {{ result.params }}</p>{% endif %}
+      {% endif %}
+      {% if result.elapsed_ms is not none %}<p class="mono small">Query time: {{ result.elapsed_ms }} ms</p>{% endif %}
+    {% endif %}
+  </section>
+</div>
+
+<section class="card wide">
+  <h3>Attack playbook — copy a payload into the <em>Username</em> field</h3>
+  <table class="payloads">
+    <tr><th>Payload</th><th>Technique</th><th>Password field</th></tr>
+    <tr><td><code>' OR '1'='1' -- </code></td><td>Boolean tautology + comment</td><td>anything</td></tr>
+    <tr><td><code>admin' -- </code></td><td>Comment-out password check</td><td>anything</td></tr>
+    <tr><td><code>admin' OR 1=1 -- </code></td><td>Login as first/admin user</td><td>anything</td></tr>
+    <tr><td><code>' UNION SELECT id,username,role,email FROM users -- </code></td><td>UNION data exfiltration</td><td>anything</td></tr>
+  </table>
+  <p class="muted small">In <b>Vulnerable</b> mode these bypass authentication. Switch
+  to any protection variant (or enable the WAF) and replay the same payload to
+  watch the attack fail.</p>
+</section>
+{% endblock %}

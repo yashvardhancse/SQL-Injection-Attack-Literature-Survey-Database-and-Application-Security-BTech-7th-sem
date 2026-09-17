@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SQLi Defence Lab — Browser Demo</title>
+<!--
+  Zero-install SQL-injection demonstrator. Runs a REAL SQLite database entirely
+  in your browser via sql.js (SQLite compiled to WebAssembly). No server needed.
+  Open this file directly, or host it on GitHub Pages. Requires internet the first
+  time (to load sql.js from the CDN). For authorised educational use only.
+-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.min.js"></script>
+<style>
+  :root{--bg:#0f1216;--panel:#171b22;--panel2:#1e232c;--ink:#e7ebf0;--muted:#9aa4b2;
+    --line:#2a303a;--accent:#4f8cff;--danger:#ff5c72;--safe:#34d399;--warn:#fbbf24;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.55 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  header{padding:16px 28px;background:linear-gradient(90deg,#12305f,#0f1216);
+    border-bottom:1px solid var(--line);display:flex;gap:14px;align-items:baseline;flex-wrap:wrap}
+  .brand{font-size:20px;font-weight:700}
+  .subtitle{color:var(--muted);font-size:13px}
+  .wrap{max-width:1040px;margin:24px auto;padding:0 20px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:20px 22px;margin-bottom:20px}
+  .wide{grid-column:1/-1}
+  h2{margin:2px 0 8px}h3{margin:2px 0 10px}
+  .muted{color:var(--muted)}.small{font-size:12.5px}
+  .mono{font-family:"SF Mono",Consolas,Menlo,monospace}
+  label{display:block;margin:12px 0 4px;font-size:13px;color:var(--muted)}
+  input[type=text],select{width:100%;padding:11px 12px;border-radius:9px;
+    border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:15px}
+  .row{display:flex;gap:10px;align-items:center}
+  .check{display:flex;align-items:center;gap:8px;color:var(--ink);margin-top:14px}
+  .check input{width:auto}
+  .btn{display:inline-block;margin-top:14px;padding:11px 18px;border:0;border-radius:9px;
+    background:var(--accent);color:#fff;font-weight:600;cursor:pointer;text-decoration:none;font-size:15px}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+  .pill{display:inline-block;padding:4px 12px;border-radius:999px;font-size:12.5px;font-weight:600}
+  .pill.danger{background:rgba(255,92,114,.15);color:var(--danger);border:1px solid var(--danger)}
+  .pill.safe{background:rgba(52,211,153,.13);color:var(--safe);border:1px solid var(--safe)}
+  .banner{padding:11px 14px;border-radius:10px;margin:10px 0;font-size:14px}
+  .ok{background:rgba(52,211,153,.14);border:1px solid var(--safe)}
+  .fail{background:rgba(255,92,114,.12);border:1px solid var(--danger)}
+  .block{background:rgba(79,140,255,.14);border:1px solid var(--accent)}
+  .warn{background:rgba(251,191,36,.13);border:1px solid var(--warn)}
+  pre.sql{background:#0b0e12;border:1px solid var(--line);border-radius:9px;padding:12px;
+    overflow-x:auto;color:#cfe1ff;font-size:13px;white-space:pre-wrap;word-break:break-word}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);font-size:13.5px}
+  code{background:#0b0e12;padding:1px 6px;border-radius:6px;color:#ffd18c}
+  .foot{text-align:center;color:var(--muted);font-size:12px;padding:24px 20px 40px}
+  @media(max-width:760px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">🛡️ SQLi Defence Lab</div>
+  <div class="subtitle">Zero-install browser demo — real SQLite (sql.js/WASM) — DAS PE4</div>
+</header>
+<main class="wrap">
+  <div id="loading" class="card">Loading SQLite (WebAssembly)…</div>
+  <div id="app" style="display:none">
+    <div class="grid">
+      <section class="card">
+        <h2>NovaBank — Account Login</h2>
+        <p class="muted">Try to log in as <code>admin</code> — with or without the password.</p>
+        <label>Username <input id="u" type="text" autocomplete="off" placeholder="username"></label>
+        <label>Password <input id="p" type="text" autocomplete="off" placeholder="password"></label>
+        <button class="btn" onclick="attempt()">Sign in</button>
+
+        <label style="margin-top:18px">Protection mode
+          <select id="mode">
+            <option value="vulnerable">Vulnerable (string concatenation)</option>
+            <option value="parameterized">Variant 1 — Parameterized query</option>
+            <option value="allowlist">Variant 2 — Input validation (allow-list)</option>
+          </select>
+        </label>
+        <label class="check"><input id="waf" type="checkbox"> Enable signature WAF (Variant 5)</label>
+      </section>
+
+      <section class="card">
+        <h3>What is happening</h3>
+        <div id="modepill" class="pill danger">Vulnerable</div>
+        <div id="result"></div>
+      </section>
+    </div>
+
+    <section class="card wide">
+      <h3>Attack playbook — paste into the <em>Username</em> field</h3>
+      <table>
+        <tr><th>Payload</th><th>Technique</th><th>Password</th></tr>
+        <tr><td><code>' OR '1'='1' -- </code></td><td>Boolean tautology + comment</td><td>anything</td></tr>
+        <tr><td><code>admin' -- </code></td><td>Comment-out password check</td><td>anything</td></tr>
+        <tr><td><code>' UNION SELECT id,username,role,email FROM users -- </code></td><td>UNION exfiltration</td><td>anything</td></tr>
+      </table>
+      <p class="muted small">In <b>Vulnerable</b> mode these bypass login. Switch to a
+      protection variant (or enable the WAF) and replay the same payload to watch it fail.</p>
+    </section>
+  </div>
+</main>
+<div class="foot">For authorised educational use only · The database lives only in your browser tab.</div>
+
+<script>
+let db;
+const WAF_RULES = [
+  ["tautology (OR/AND =)", /\b(or|and)\b\s+[\w'"]+\s*=\s*[\w'"]+/i],
+  ["comment (-- # /*)", /(--|#|\/\*|\*\/)/],
+  ["stacked query", /;\s*\w/],
+  ["UNION-based", /\bunion\b\s+(all\s+)?\bselect\b/i],
+  ["SQL keyword", /\b(select|insert|update|delete|drop|exec)\b/i],
+  ["quote breakout", /['"]\s*(or|and|;|--|\))/i],
+];
+const ALLOW = /^[A-Za-z0-9_.@\-]{1,32}$/;
+
+function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+initSqlJs({locateFile:f=>"https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/"+f})
+.then(SQL=>{
+  db=new SQL.Database();
+  db.run(`CREATE TABLE users(id INTEGER PRIMARY KEY, username TEXT, password TEXT, role TEXT, email TEXT);
+    INSERT INTO users VALUES (1,'admin','S3cure!Admin','admin','admin@bank-demo.local');
+    INSERT INTO users VALUES (2,'alice','wonderland','user','alice@bank-demo.local');
+    INSERT INTO users VALUES (3,'bob','builder123','user','bob@bank-demo.local');`);
+  document.getElementById('loading').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('mode').addEventListener('change',e=>{
+    const v=e.target.value, pill=document.getElementById('modepill');
+    pill.className='pill '+(v==='vulnerable'?'danger':'safe');
+    pill.textContent=e.target.selectedOptions[0].textContent;
+  });
+});
+
+function wafInspect(a,b){
+  const blob=(a+' '+b), hits=[];
+  for(const [name,re] of WAF_RULES) if(re.test(blob)) hits.push(name);
+  return hits;
+}
+
+function attempt(){
+  const u=document.getElementById('u').value, p=document.getElementById('p').value;
+  const mode=document.getElementById('mode').value;
+  const wafOn=document.getElementById('waf').checked;
+  const out=document.getElementById('result');
+  let html='';
+
+  if(wafOn){
+    const hits=wafInspect(u,p);
+    if(hits.length){out.innerHTML=`<div class="banner block">⛔ Blocked by WAF before the database.</div>
+      <p class="mono small"><b>Matched:</b> ${esc(hits.join('; '))}</p>`;return;}
+  }
+
+  if(mode==='allowlist' && !ALLOW.test(u)){
+    out.innerHTML=`<div class="banner block">⛔ Rejected by input validation.</div>
+      <p class="mono small">Username failed allow-list <code>^[A-Za-z0-9_.@-]{1,32}$</code>.</p>`;return;}
+
+  let row=null, shownSql='';
+  try{
+    if(mode==='vulnerable'){
+      // INSECURE: input concatenated into SQL text
+      const q=`SELECT id,username,role,email FROM users WHERE username='${u}' AND password='${p}'`;
+      shownSql=q;
+      const r=db.exec(q);
+      if(r.length && r[0].values.length) row=r[0].values[0];
+    }else{
+      // SECURE: bound parameters — input is data, never parsed as SQL
+      const q=`SELECT id,username,role,email FROM users WHERE username=? AND password=?`;
+      shownSql=q+"   -- params: ["+JSON.stringify(u)+", "+JSON.stringify(p)+"]";
+      const st=db.prepare(q); st.bind([u,p]);
+      if(st.step()) row=st.get(); st.free();
+    }
+  }catch(e){ out.innerHTML=`<div class="banner warn">⚠️ DB error: ${esc(e.message)}</div>
+      <pre class="sql">${esc(shownSql)}</pre>`; return; }
+
+  if(row){
+    const admin = row[3]==='admin';
+    html=`<div class="banner ok">✅ Authentication succeeded — logged in as <b>${esc(row[1])}</b> (${esc(row[3])}).</div>`;
+    if(mode==='vulnerable' && admin)
+      html+=`<div class="banner warn">⚠️ Admin reached without a valid password → successful SQL-injection bypass.</div>`;
+  }else{
+    html=`<div class="banner fail">🔒 Invalid credentials. Login denied.</div>`;
+  }
+  html+=`<p class="muted small">SQL sent to the engine:</p><pre class="sql">${esc(shownSql)}</pre>`;
+  out.innerHTML=html;
+}
+</script>
+</body>
+</html>

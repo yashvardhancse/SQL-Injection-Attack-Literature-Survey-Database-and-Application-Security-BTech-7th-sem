@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}SQLi Defence Lab{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">🛡️ SQLi&nbsp;Defence&nbsp;Lab</div>
+    <div class="subtitle">SQL Injection with Protection — DAS PE4 live prototype</div>
+  </header>
+  <main class="wrap">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="foot">
+    For authorised educational use only · Attacks are performed against this
+    local demo database, never a third-party system.
+  </footer>
+</body>
+</html>
