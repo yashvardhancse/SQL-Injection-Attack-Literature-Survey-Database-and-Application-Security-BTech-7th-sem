@@ -9,7 +9,7 @@ env/
 # Prototype runtime
 prototype/users.db
 
-# LaTeX build artefacts
+# LaTeX build artefacts (keep the final report/main.pdf tracked)
 report/*.aux
 report/*.log
 report/*.out
@@ -18,7 +18,7 @@ report/*.blg
 report/*.synctex.gz
 report/*.fls
 report/*.fdb_latexmk
-report/*.pdf
+report/_build/
 
 # OS / editor
 .DS_Store

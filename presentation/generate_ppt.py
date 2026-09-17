@@ -140,7 +140,9 @@ text(s, Inches(1), Inches(2.3), Inches(11.3), Inches(2.2), [
 ])
 text(s, Inches(1), Inches(4.6), Inches(11.3), Inches(2), [
     {"text": "DAS — Project Element 4  ·  Team of 4", "size": 16, "color": MUTED, "sp_after": 4},
-    {"text": "Members:  [Name 1 · RegNo]   [Name 2 · RegNo]   [Name 3 · RegNo]   [Name 4 · RegNo]",
+    {"text": "YashVardhan Gupta · 230905442      Sheldon Rodricks · 230905324",
+     "size": 15, "color": WHITE, "sp_after": 2},
+    {"text": "Lakshya Agrawal · 230905552      Aditya Aryan Sahu · 230905560",
      "size": 15, "color": WHITE, "sp_after": 4},
     {"text": "Dept. of Computer Science & Engineering, Manipal Institute of Technology, MAHE",
      "size": 14, "color": MUTED},
