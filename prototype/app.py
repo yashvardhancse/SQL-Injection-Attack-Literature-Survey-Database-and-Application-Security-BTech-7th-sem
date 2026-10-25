@@ -91,9 +91,10 @@ engine = create_engine(f"sqlite:///{DB_PATH}", future=True)
 
 def init_db(force: bool = False) -> None:
     """Create and seed the SQLite database if it does not already exist."""
-    if force and os.path.exists(DB_PATH):
-        os.remove(DB_PATH)
-    fresh = not os.path.exists(DB_PATH)
+    if force:
+        # Drop then recreate — avoids WinError 32 (can't delete an open file)
+        Base.metadata.drop_all(engine)
+    fresh = force or not os.path.exists(DB_PATH)
     Base.metadata.create_all(engine)
     if fresh:
         with Session(engine) as s:
